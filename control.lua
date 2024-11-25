@@ -7,7 +7,6 @@ local function log_debug(message)
     end
 end
 
-
 -- Function to map signal names to research technologies
 local function map_signal_to_research(signal_name)
     local research_map = {
@@ -35,13 +34,8 @@ local function map_signal_to_research(signal_name)
         ["signal-M"] = "steel-plate-productivity",
         ["signal-N"] = "worker-robots-speed-7"
     }
-    
     return research_map[signal_name]
 end
-
-
--- Ensure storage is initialized
-local storage = { combinators = {} }
 
 -- Validate and extract signals from a combinator
 local function get_signals_from_combinator(combinator)
@@ -71,6 +65,11 @@ end
 
 -- Process all registered combinators
 local function process_combinators()
+    if not storage.combinators then
+        log_debug("storage.combinators is nil. Skipping processing.")
+        return
+    end
+
     for unit_number, combinator_data in pairs(storage.combinators) do
         -- Validate combinator data
         if not combinator_data or not combinator_data.entity or not combinator_data.entity.valid then
@@ -96,7 +95,6 @@ local function process_combinators()
                                 
                                 if success then
                                     log_debug("Set research to: " .. research_name)
-                                    game.print("Research_Control_Combinator changed research to: " .. research_name)
                                 else
                                     log_debug("Failed to set research: " .. research_name)
                                 end
@@ -111,13 +109,17 @@ local function process_combinators()
     end
 end
 
-
 -- Handle combinator placement
 local function on_built(event)
     local entity = event.created_entity or event.entity
     if not entity or entity.name ~= "Research_Control_Combinator" then return end
 
-    storage.combinators[entity.unit_number] = { entity = entity }
+    storage.combinators = storage.combinators or {}
+    storage.combinators[entity.unit_number] = {
+        entity = entity,
+        position = entity.position,
+        surface = entity.surface.name,
+    }
     log_debug("Added combinator with unit number: " .. entity.unit_number)
 end
 
@@ -126,30 +128,53 @@ local function on_destroy(event)
     local entity = event.entity
     if not entity or entity.name ~= "Research_Control_Combinator" then return end
 
-    storage.combinators[entity.unit_number] = nil
-    log_debug("Removed combinator with unit number: " .. entity.unit_number)
+    if storage.combinators then
+        storage.combinators[entity.unit_number] = nil
+        log_debug("Removed combinator with unit number: " .. entity.unit_number)
+    end
 end
 
 -- Initialize storage
 local function on_init()
-    storage.combinators = {}
+    storage.combinators = storage.combinators or {}
     log_debug("Initialized mod storage.")
 end
 
+-- Reinitialize combinators on game reload
+local function reinitialize_combinators_on_tick()
+    for unit_number, data in pairs(storage.combinators or {}) do
+        local surface = game.surfaces[data.surface]
+        if surface then
+            local entity = surface.find_entity("Research_Control_Combinator", data.position)
+            if entity and entity.valid then
+                data.entity = entity
+            else
+                storage.combinators[unit_number] = nil
+                log_debug("Removed invalid combinator with unit number: " .. unit_number)
+            end
+        end
+    end
+    -- Unregister the one-time on_tick handler
+    script.on_event(defines.events.on_tick, nil)
+end
+
 -- Register events
+local function register_events()
+    script.on_event(defines.events.on_built_entity, on_built)
+    script.on_event(defines.events.on_robot_built_entity, on_built)
+    script.on_event(defines.events.script_raised_built, on_built)
+    script.on_event(defines.events.script_raised_revive, on_built)
+
+    script.on_event(defines.events.on_entity_died, on_destroy)
+    script.on_event(defines.events.on_pre_player_mined_item, on_destroy)
+    script.on_event(defines.events.on_robot_pre_mined, on_destroy)
+    script.on_event(defines.events.script_raised_destroy, on_destroy)
+
+    script.on_nth_tick(60, process_combinators)
+end
+
 script.on_init(on_init)
-script.on_event(defines.events.on_built_entity, on_built)
-script.on_event(defines.events.on_robot_built_entity, on_built)
-script.on_event(defines.events.script_raised_built, on_built)
-script.on_event(defines.events.script_raised_revive, on_built)
-
-script.on_event(defines.events.on_entity_died, on_destroy)
-script.on_event(defines.events.on_pre_player_mined_item, on_destroy)
-script.on_event(defines.events.on_robot_pre_mined, on_destroy)
-script.on_event(defines.events.script_raised_destroy, on_destroy)
-
--- Process combinators every 60 ticks (1 second)
-script.on_nth_tick(60, function()
-    process_combinators()
+script.on_load(function()
+    script.on_event(defines.events.on_tick, reinitialize_combinators_on_tick)
 end)
-
+register_events()
