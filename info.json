@@ -1,0 +1,12 @@
+{
+  "name": "Research_Control_Combinator",
+  "version": "1.0.0",
+  "title": "Research Control Combinator",
+  "author": "Clevlore",
+  "description": "Adds a combinator that sets Space Age infinite research based on a signal.",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "base >= 2.0",
+    "space-age >= 1.0.0"
+  ]
+}
