@@ -1,6 +1,6 @@
 {
   "name": "Research_Control_Combinator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "title": "Research Control Combinator",
   "author": "Clevlore",
   "description": "Adds a combinator that sets Space Age infinite research based on a signal.",
