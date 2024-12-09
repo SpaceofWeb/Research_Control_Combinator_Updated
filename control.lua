@@ -147,21 +147,23 @@ local function on_load()
     script.on_event(defines.events.on_pre_player_mined_item, on_destroy)
     script.on_event(defines.events.on_robot_pre_mined, on_destroy)
     script.on_event(defines.events.script_raised_destroy, on_destroy)
+    script.on_event(defines.events.on_research_finished, process_combinators)
     script.on_nth_tick(60, process_combinators)
 end
 
--- Register events
-script.on_init(on_init)
-script.on_load(on_load)
 
+-- Register events
 script.on_event(defines.events.on_built_entity, on_built)
 script.on_event(defines.events.on_robot_built_entity, on_built)
 script.on_event(defines.events.script_raised_built, on_built)
 script.on_event(defines.events.script_raised_revive, on_built)
-
 script.on_event(defines.events.on_entity_died, on_destroy)
 script.on_event(defines.events.on_pre_player_mined_item, on_destroy)
 script.on_event(defines.events.on_robot_pre_mined, on_destroy)
 script.on_event(defines.events.script_raised_destroy, on_destroy)
-
+script.on_event(defines.events.on_research_finished, process_combinators)
 script.on_nth_tick(60, process_combinators)
+
+
+script.on_init(on_init)
+script.on_load(on_load)
