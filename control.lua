@@ -1,5 +1,6 @@
 -- Debug flag: set to true to enable debug logging
 local debug = false
+local research_map = {}
 
 local function log_debug(message)
     if debug then
@@ -9,31 +10,106 @@ end
 
 -- Function to map signal names to research technologies
 local function map_signal_to_research(signal_name)
-    local research_map = {
-        ["signal-1"] = "stronger-explosives-7",
-        ["signal-2"] = "refined-flammables-7",
-        ["signal-3"] = "plastic-bar-productivity",
-        ["signal-4"] = "rocket-fuel-productivity",
-        ["signal-5"] = "health",
-        ["signal-6"] = "asteroid-productivity",
-        ["signal-7"] = "railgun-damage-1",
-        ["signal-8"] = "research-productivity",
-        ["signal-9"] = "artillery-shell-damage-1",
-        ["signal-A"] = "artillery-shell-range-1",
-        ["signal-B"] = "artillery-shell-speed-1",
-        ["signal-C"] = "electric-weapons-damage-4",
-        ["signal-D"] = "follower-robot-count-5",
-        ["signal-E"] = "laser-weapons-damage-7",
-        ["signal-F"] = "low-density-structure-productivity",
-        ["signal-G"] = "mining-productivity-3",
-        ["signal-H"] = "physical-projectile-damage-7",
-        ["signal-I"] = "processing-unit-productivity",
-        ["signal-J"] = "railgun-shooting-speed-1",
-        ["signal-K"] = "rocket-part-productivity",
-        ["signal-L"] = "scrap-recycling-productivity",
-        ["signal-M"] = "steel-plate-productivity",
-        ["signal-N"] = "worker-robots-speed-7"
+    local last_signal_index = 1
+    local signals = {
+        "signal-0",
+        "signal-1",
+        "signal-2",
+        "signal-3",
+        "signal-4",
+        "signal-5",
+        "signal-6",
+        "signal-7",
+        "signal-8",
+        "signal-9",
+        "signal-A",
+        "signal-B",
+        "signal-C",
+        "signal-D",
+        "signal-E",
+        "signal-F",
+        "signal-G",
+        "signal-H",
+        "signal-I",
+        "signal-J",
+        "signal-K",
+        "signal-L",
+        "signal-M",
+        "signal-N",
+        "signal-O",
+        "signal-P",
+        "signal-Q",
+        "signal-R",
+        "signal-S",
+        "signal-T",
+        "signal-V",
+        "signal-X",
+        "signal-Y",
+        "signal-Z",
+        "signal-comma",
+        "signal-letter-dot",
+        "signal-exclamation-mark",
+        "signal-question-mark",
+        "signal-colon",
+        "signal-slash",
+        "signal-apostrophe",
+        "signal-quotation-mark",
+        "signal-ampersand",
+        "signal-circumflex-accent",
+        "signal-number-sign",
+        "signal-percent",
+        "signal-plus",
+        "signal-minus",
+        "signal-multiplication",
+        "signal-division",
+        "signal-equal",
+        "signal-not-equal",
+        "signal-less-than",
+        "signal-greater-than",
+        "signal-less-than-or-equal-to",
+        "signal-greater-than-or-equal-to",
+        "signal-left-paranthesis",
+        "signal-right-paranthesis",
+        "signal-left-square-bracket",
+        "signal-right-square-bracket"
     }
+
+    for _, p in pairs(game.forces.player.technologies) do
+        if last_signal_index > #signals then
+            break
+        end
+
+        if not p.researched then
+            research_map[signals[last_signal_index]] = p.name
+            last_signal_index = last_signal_index + 1
+        end
+    end
+
+    -- local research_map = {
+    --     ["signal-1"] = "stronger-explosives-7",
+    --     ["signal-2"] = "refined-flammables-7",
+    --     ["signal-3"] = "plastic-bar-productivity",
+    --     ["signal-4"] = "rocket-fuel-productivity",
+    --     ["signal-5"] = "health",
+    --     ["signal-6"] = "asteroid-productivity",
+    --     ["signal-7"] = "railgun-damage-1",
+    --     ["signal-8"] = "research-productivity",
+    --     ["signal-9"] = "artillery-shell-damage-1",
+    --     ["signal-A"] = "artillery-shell-range-1",
+    --     ["signal-B"] = "artillery-shell-speed-1",
+    --     ["signal-C"] = "electric-weapons-damage-4",
+    --     ["signal-D"] = "follower-robot-count-5",
+    --     ["signal-E"] = "laser-weapons-damage-7",
+    --     ["signal-F"] = "low-density-structure-productivity",
+    --     ["signal-G"] = "mining-productivity-3",
+    --     ["signal-H"] = "physical-projectile-damage-7",
+    --     ["signal-I"] = "processing-unit-productivity",
+    --     ["signal-J"] = "railgun-shooting-speed-1",
+    --     ["signal-K"] = "rocket-part-productivity",
+    --     ["signal-L"] = "scrap-recycling-productivity",
+    --     ["signal-M"] = "steel-plate-productivity",
+    --     ["signal-N"] = "worker-robots-speed-7"
+    -- }
     return research_map[signal_name]
 end
 
@@ -134,6 +210,17 @@ end
 local function on_init()
     storage.combinators = storage.combinators or {}
     log_debug("Initialized mod storage.")
+
+    commands.add_command("research_signals", [["Show infinite technologies and
+    their linked signals for Research Control Combinator"]], function(command) 
+        map_signal_to_research("")
+
+        local s = ""
+        for k, v in pairs(research_map) do
+            s = s .. k .. " => " .. v .. ", " 
+        end 
+        game.print(string.sub(s, 1, -3)) 
+    end)
 end
 
 -- Reload storage on game load
@@ -149,6 +236,17 @@ local function on_load()
     script.on_event(defines.events.script_raised_destroy, on_destroy)
     script.on_event(defines.events.on_research_finished, process_combinators)
     script.on_nth_tick(60, process_combinators)
+
+    commands.add_command("research_signals", [["Show infinite technologies and
+    their linked signals for Research Control Combinator"]], function(command) 
+        map_signal_to_research("")
+
+        local s = ""
+        for k, v in pairs(research_map) do
+            s = s .. k .. " => " .. v .. ", " 
+        end 
+        game.print(string.sub(s, 1, -3)) 
+    end)
 end
 
 
